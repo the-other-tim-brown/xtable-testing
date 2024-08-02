@@ -31,7 +31,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.xtable</groupId>
-            <artifactId>xtable-hudi-support-extensions</artifactId>
+            <artifactId>incubator-xtable-core</artifactId>
             <version>${xtable.version}</version>
         </dependency>
         <dependency>
