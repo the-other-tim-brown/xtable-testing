@@ -35,6 +35,11 @@
             <version>${xtable.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.xtable</groupId>
+            <artifactId>incubator-xtable-hudi-support-extensions</artifactId>
+            <version>${xtable.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_2.12</artifactId>
         </dependency>
