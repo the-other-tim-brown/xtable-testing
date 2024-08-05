@@ -27,6 +27,9 @@ import org.apache.xtable.hudi.HudiSourceConfigImpl;
 import org.apache.xtable.iceberg.IcebergConversionSourceProvider;
 import org.apache.xtable.model.sync.SyncMode;
 import org.apache.xtable.model.sync.SyncResult;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -42,13 +45,22 @@ import static org.example.common.Utils.getSparkSession;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestConversion {
+  private SparkSession sparkSession;
   @TempDir Path tmpDir;
+
+  @BeforeEach
+  void setup() {
+    sparkSession = getSparkSession(tmpDir);
+  }
+
+  @AfterEach
+  void teardown() {
+    sparkSession.close();
+  }
 
   @Test
   void convertFromDelta() {
     Path path = tmpDir.resolve("test-table-delta");
-    SparkSession sparkSession = getSparkSession(path);
-
     sparkSession.createDataset(createRows(), RowEncoder.apply(STRUCT_TYPE)).write().format("delta")
         .mode(SaveMode.Append).save(path.toString());
 
@@ -69,8 +81,6 @@ public class TestConversion {
   @Test
   void convertFromHudi() {
     Path path = tmpDir.resolve("test-table-hudi");
-    SparkSession sparkSession = getSparkSession(path);
-
     Map<String, String> options = new HashMap<>();
     options.put(DataSourceWriteOptions.PRECOMBINE_FIELD().key(), "key");
     options.put(DataSourceWriteOptions.RECORDKEY_FIELD().key(), "key");
@@ -105,7 +115,6 @@ public class TestConversion {
   void convertFromIceberg() throws Exception {
     String tableName = "table_1";
     Path path = tmpDir.resolve(tableName);
-    SparkSession sparkSession = getSparkSession(path);
     try (HadoopCatalog hadoopCatalog = new HadoopCatalog(new Configuration(), tmpDir.toString())) {
       // No namespace specified.
       TableIdentifier tableIdentifier = TableIdentifier.of(tableName);
