@@ -18,6 +18,10 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.iceberg</groupId>
+            <artifactId>iceberg-spark-runtime-3.4_${scala.version.prefix}</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
         </dependency>
@@ -31,14 +35,23 @@
         </dependency>
         <dependency>
             <groupId>org.apache.xtable</groupId>
-            <artifactId>incubator-xtable-core</artifactId>
+            <artifactId>xtable-core</artifactId>
             <version>${xtable.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hudi</groupId>
+            <artifactId>hudi-spark3.4-bundle_2.12</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.xtable</groupId>
-            <artifactId>incubator-xtable-hudi-support-extensions</artifactId>
-            <version>${xtable.version}</version>
+            <groupId>org.apache.iceberg</groupId>
+            <artifactId>iceberg-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.iceberg</groupId>
+            <artifactId>iceberg-api</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_2.12</artifactId>
@@ -46,19 +59,6 @@
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql_2.12</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.parquet</groupId>
-            <artifactId>parquet-avro</artifactId>
-            <version>1.12.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hudi</groupId>
-            <artifactId>hudi-spark3.4-bundle_2.12</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.iceberg</groupId>
-            <artifactId>iceberg-spark-runtime-3.4_${scala.version.prefix}</artifactId>
         </dependency>
 
         <dependency>
@@ -81,6 +81,12 @@
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-runner</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.31</version>
         </dependency>
     </dependencies>
 

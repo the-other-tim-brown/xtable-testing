@@ -84,8 +84,6 @@ public class TestConversion {
     options.put(DataSourceWriteOptions.PARTITIONPATH_FIELD().key(), "partition_string");
     options.put(HoodieTableConfig.NAME.key(), "test-table1");
     options.put(HoodieWriteConfig.BASE_PATH.key(), path.toString());
-    options.put("hoodie.avro.write.support.class", "org.apache.xtable.hudi.extensions.HoodieAvroWriteSupportWithFieldIds");
-    options.put("hoodie.client.init.callback.classes", "org.apache.xtable.hudi.extensions.AddFieldIdsClientInitCallback");
     options.put("hoodie.datasource.write.row.writer.enable", "false");
 
     sparkSession.createDataset(createRows(), RowEncoder.apply(STRUCT_TYPE)).write().format("hudi")

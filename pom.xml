@@ -18,7 +18,7 @@
         <repository>
             <id>apache-staging</id>
             <name>Apache Staging Repository for XTable</name>
-            <url>https://repository.apache.org/content/repositories/orgapachextable-1001/</url>
+            <url>https://repository.apache.org/content/repositories/orgapachextable-1002/</url>
         </repository>
     </repositories>
 
@@ -31,7 +31,7 @@
         <delta.version>2.4.0</delta.version>
         <hudi.version>0.14.0</hudi.version>
         <iceberg.version>1.4.2</iceberg.version>
-        <xtable.version>0.1.0-rc2</xtable.version>
+        <xtable.version>0.1.0-incubating-rc3</xtable.version>
         <jackson.version>2.17.1</jackson.version>
         <scala.version>2.12.15</scala.version>
         <scala.version.prefix>2.12</scala.version.prefix>
@@ -43,7 +43,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.22.2</version>
+                <version>3.3.1</version>
                 <configuration>
                     <skip>${skipUTs}</skip>
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
@@ -54,6 +54,11 @@
                         <groupId>org.junit.jupiter</groupId>
                         <artifactId>junit-jupiter-engine</artifactId>
                         <version>${junit.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.apache.maven.surefire</groupId>
+                        <artifactId>surefire-junit-platform</artifactId>
+                        <version>3.0.0</version>
                     </dependency>
                 </dependencies>
             </plugin>
@@ -106,6 +111,12 @@
                 <version>${jackson.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.apache.parquet</groupId>
+                <artifactId>parquet-avro</artifactId>
+                <version>1.12.2</version>
+            </dependency>
+
             <!-- Spark -->
             <dependency>
                 <groupId>org.apache.spark</groupId>
@@ -153,6 +164,21 @@
 
             <dependency>
                 <groupId>org.apache.iceberg</groupId>
+                <artifactId>iceberg-core</artifactId>
+                <version>${iceberg.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.iceberg</groupId>
+                <artifactId>iceberg-api</artifactId>
+                <version>${iceberg.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.iceberg</groupId>
+                <artifactId>iceberg-parquet</artifactId>
+                <version>${iceberg.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.iceberg</groupId>
                 <artifactId>iceberg-spark-runtime-3.4_${scala.version.prefix}</artifactId>
                 <version>${iceberg.version}</version>
             </dependency>
@@ -187,6 +213,7 @@
                 <version>1.8.2</version>
                 <scope>test</scope>
             </dependency>
+
         </dependencies>
     </dependencyManagement>
 
