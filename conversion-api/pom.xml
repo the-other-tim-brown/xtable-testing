@@ -35,7 +35,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.xtable</groupId>
-            <artifactId>xtable-core</artifactId>
+            <artifactId>xtable-core_2.12</artifactId>
             <version>${xtable.version}</version>
         </dependency>
 

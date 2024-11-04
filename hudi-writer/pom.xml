@@ -31,7 +31,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.xtable</groupId>
-            <artifactId>xtable-hudi-support-extensions</artifactId>
+            <artifactId>xtable-hudi-support-extensions_2.12</artifactId>
             <version>${xtable.version}</version>
             <classifier>bundled</classifier>
         </dependency>

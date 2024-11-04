@@ -18,7 +18,7 @@
         <repository>
             <id>apache-staging</id>
             <name>Apache Staging Repository for XTable</name>
-            <url>https://repository.apache.org/content/repositories/orgapachextable-1002/</url>
+            <url>https://repository.apache.org/content/repositories/orgapachextable-1006/</url>
         </repository>
     </repositories>
 
@@ -31,7 +31,7 @@
         <delta.version>2.4.0</delta.version>
         <hudi.version>0.14.0</hudi.version>
         <iceberg.version>1.4.2</iceberg.version>
-        <xtable.version>0.1.0-incubating-rc3</xtable.version>
+        <xtable.version>0.2.0-incubating</xtable.version>
         <jackson.version>2.17.1</jackson.version>
         <scala.version>2.12.15</scala.version>
         <scala.version.prefix>2.12</scala.version.prefix>

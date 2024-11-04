@@ -15,13 +15,13 @@ import org.apache.iceberg.types.Types;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.catalyst.encoders.RowEncoder;
+import org.apache.xtable.conversion.ConversionConfig;
 import org.apache.xtable.conversion.ConversionController;
 import org.apache.xtable.conversion.ConversionSourceProvider;
-import org.apache.xtable.conversion.PerTableConfig;
-import org.apache.xtable.conversion.PerTableConfigImpl;
+import org.apache.xtable.conversion.SourceTable;
+import org.apache.xtable.conversion.TargetTable;
 import org.apache.xtable.delta.DeltaConversionSourceProvider;
 import org.apache.xtable.hudi.HudiConversionSourceProvider;
-import org.apache.xtable.hudi.HudiSourceConfigImpl;
 import org.apache.xtable.iceberg.IcebergConversionSourceProvider;
 import org.apache.xtable.model.sync.SyncMode;
 import org.apache.xtable.model.sync.SyncResult;
@@ -32,10 +32,11 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
+import static org.apache.xtable.hudi.HudiSourceConfig.PARTITION_FIELD_SPEC_CONFIG;
 import static org.example.common.Utils.STRUCT_TYPE;
 import static org.example.common.Utils.createRows;
 import static org.example.common.Utils.getSparkSession;
@@ -63,14 +64,20 @@ public class TestConversion {
 
     ConversionController conversionController = new ConversionController(new Configuration());
     ConversionSourceProvider<Long> provider = new DeltaConversionSourceProvider();
-    provider.init(new Configuration(), Collections.emptyMap());
-    PerTableConfig perTableConfig = PerTableConfigImpl.builder()
-        .tableBasePath(path.toString())
-        .tableName("table_1")
-        .targetTableFormats(Arrays.asList("HUDI", "ICEBERG"))
+    provider.init(new Configuration());
+    String tableName = "table_1";
+    ConversionConfig conversionConfig = ConversionConfig.builder()
+        .sourceTable(SourceTable.builder()
+            .basePath(path.toString())
+            .name(tableName)
+            .formatName("DELTA")
+            .build())
+        .targetTables(Arrays.asList(
+            TargetTable.builder().basePath(path.toString()).formatName("HUDI").name(tableName).build(),
+            TargetTable.builder().basePath(path.toString()).formatName("ICEBERG").name(tableName).build()))
         .syncMode(SyncMode.INCREMENTAL)
         .build();
-    conversionController.sync(perTableConfig, provider).forEach((format, result) -> {
+    conversionController.sync(conversionConfig, provider).forEach((format, result) -> {
       assertEquals(SyncResult.SyncStatusCode.SUCCESS, result.getStatus().getStatusCode());
     });
   }
@@ -91,17 +98,23 @@ public class TestConversion {
 
     ConversionController conversionController = new ConversionController(new Configuration());
     ConversionSourceProvider<HoodieInstant> provider = new HudiConversionSourceProvider();
-    provider.init(new Configuration(), Collections.emptyMap());
-    PerTableConfig perTableConfig = PerTableConfigImpl.builder()
-        .hudiSourceConfig(HudiSourceConfigImpl.builder()
-            .partitionFieldSpecConfig("partition_string:VALUE")
+    provider.init(new Configuration());
+    String tableName = "table_2";
+    Properties sourceProperties = new Properties();
+    sourceProperties.put(PARTITION_FIELD_SPEC_CONFIG, "partition_string:VALUE");
+    ConversionConfig conversionConfig = ConversionConfig.builder()
+        .sourceTable(SourceTable.builder()
+            .basePath(path.toString())
+            .name(tableName)
+            .additionalProperties(sourceProperties)
+            .formatName("HUDI")
             .build())
-        .tableBasePath(path.toString())
-        .tableName("table_1")
-        .targetTableFormats(Arrays.asList("DELTA", "ICEBERG"))
+        .targetTables(Arrays.asList(
+            TargetTable.builder().basePath(path.toString()).formatName("DELTA").name(tableName).build(),
+            TargetTable.builder().basePath(path.toString()).formatName("ICEBERG").name(tableName).build()))
         .syncMode(SyncMode.INCREMENTAL)
         .build();
-    conversionController.sync(perTableConfig, provider).forEach((format, result) -> {
+    conversionController.sync(conversionConfig, provider).forEach((format, result) -> {
       assertEquals(SyncResult.SyncStatusCode.SUCCESS, result.getStatus().getStatusCode());
     });
   }
@@ -124,14 +137,19 @@ public class TestConversion {
 
       ConversionController conversionController = new ConversionController(new Configuration());
       ConversionSourceProvider<Snapshot> provider = new IcebergConversionSourceProvider();
-      provider.init(new Configuration(), Collections.emptyMap());
-      PerTableConfig perTableConfig = PerTableConfigImpl.builder()
-          .tableBasePath(path.toString())
-          .tableName(tableName)
-          .targetTableFormats(Arrays.asList("HUDI", "DELTA"))
+      provider.init(new Configuration());
+      ConversionConfig conversionConfig = ConversionConfig.builder()
+          .sourceTable(SourceTable.builder()
+              .basePath(path.toString())
+              .name(tableName)
+              .formatName("ICEBERG")
+              .build())
+          .targetTables(Arrays.asList(
+              TargetTable.builder().basePath(path.toString()).formatName("HUDI").name(tableName).build(),
+              TargetTable.builder().basePath(path.toString()).formatName("DELTA").name(tableName).build()))
           .syncMode(SyncMode.INCREMENTAL)
           .build();
-      conversionController.sync(perTableConfig, provider).forEach((format, result) -> {
+      conversionController.sync(conversionConfig, provider).forEach((format, result) -> {
         assertEquals(SyncResult.SyncStatusCode.SUCCESS, result.getStatus().getStatusCode());
       });
     }
