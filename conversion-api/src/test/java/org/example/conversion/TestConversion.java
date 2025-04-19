@@ -24,7 +24,7 @@ import org.apache.xtable.delta.DeltaConversionSourceProvider;
 import org.apache.xtable.hudi.HudiConversionSourceProvider;
 import org.apache.xtable.iceberg.IcebergConversionSourceProvider;
 import org.apache.xtable.model.sync.SyncMode;
-import org.apache.xtable.model.sync.SyncResult;
+import org.apache.xtable.model.sync.SyncStatusCode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -78,7 +78,7 @@ public class TestConversion {
         .syncMode(SyncMode.INCREMENTAL)
         .build();
     conversionController.sync(conversionConfig, provider).forEach((format, result) -> {
-      assertEquals(SyncResult.SyncStatusCode.SUCCESS, result.getStatus().getStatusCode());
+      assertEquals(SyncStatusCode.SUCCESS, result.getTableFormatSyncStatus().getStatusCode());
     });
   }
 
@@ -115,7 +115,7 @@ public class TestConversion {
         .syncMode(SyncMode.INCREMENTAL)
         .build();
     conversionController.sync(conversionConfig, provider).forEach((format, result) -> {
-      assertEquals(SyncResult.SyncStatusCode.SUCCESS, result.getStatus().getStatusCode());
+      assertEquals(SyncStatusCode.SUCCESS, result.getTableFormatSyncStatus().getStatusCode());
     });
   }
 
@@ -150,7 +150,7 @@ public class TestConversion {
           .syncMode(SyncMode.INCREMENTAL)
           .build();
       conversionController.sync(conversionConfig, provider).forEach((format, result) -> {
-        assertEquals(SyncResult.SyncStatusCode.SUCCESS, result.getStatus().getStatusCode());
+        assertEquals(SyncStatusCode.SUCCESS, result.getTableFormatSyncStatus().getStatusCode());
       });
     }
   }
