@@ -12,6 +12,11 @@ import org.apache.iceberg.Snapshot;
 import org.apache.iceberg.catalog.TableIdentifier;
 import org.apache.iceberg.hadoop.HadoopCatalog;
 import org.apache.iceberg.types.Types;
+import org.apache.paimon.catalog.Catalog;
+import org.apache.paimon.catalog.CatalogContext;
+import org.apache.paimon.catalog.CatalogFactory;
+import org.apache.paimon.catalog.Identifier;
+import org.apache.paimon.table.FileStoreTable;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.catalyst.encoders.RowEncoder;
@@ -24,7 +29,9 @@ import org.apache.xtable.delta.DeltaConversionSourceProvider;
 import org.apache.xtable.hudi.HudiConversionSourceProvider;
 import org.apache.xtable.iceberg.IcebergConversionSourceProvider;
 import org.apache.xtable.model.sync.SyncMode;
+import org.apache.xtable.model.sync.SyncResult;
 import org.apache.xtable.model.sync.SyncStatusCode;
+import org.apache.xtable.paimon.PaimonConversionSourceProvider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,9 +39,11 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import static org.apache.xtable.hudi.HudiSourceConfig.PARTITION_FIELD_SPEC_CONFIG;
 import static org.example.common.Utils.STRUCT_TYPE;
@@ -77,9 +86,7 @@ public class TestConversion {
             TargetTable.builder().basePath(path.toString()).formatName("ICEBERG").name(tableName).build()))
         .syncMode(SyncMode.INCREMENTAL)
         .build();
-    conversionController.sync(conversionConfig, provider).forEach((format, result) -> {
-      assertEquals(SyncStatusCode.SUCCESS, result.getTableFormatSyncStatus().getStatusCode());
-    });
+    assertSyncSuccess(conversionController, conversionConfig, provider, "HUDI", "ICEBERG");
   }
 
   @Test
@@ -114,9 +121,7 @@ public class TestConversion {
             TargetTable.builder().basePath(path.toString()).formatName("ICEBERG").name(tableName).build()))
         .syncMode(SyncMode.INCREMENTAL)
         .build();
-    conversionController.sync(conversionConfig, provider).forEach((format, result) -> {
-      assertEquals(SyncStatusCode.SUCCESS, result.getTableFormatSyncStatus().getStatusCode());
-    });
+    assertSyncSuccess(conversionController, conversionConfig, provider, "DELTA", "ICEBERG");
   }
 
   @Test
@@ -149,9 +154,67 @@ public class TestConversion {
               TargetTable.builder().basePath(path.toString()).formatName("DELTA").name(tableName).build()))
           .syncMode(SyncMode.INCREMENTAL)
           .build();
-      conversionController.sync(conversionConfig, provider).forEach((format, result) -> {
-        assertEquals(SyncStatusCode.SUCCESS, result.getTableFormatSyncStatus().getStatusCode());
-      });
+      assertSyncSuccess(conversionController, conversionConfig, provider, "HUDI", "DELTA");
     }
+  }
+
+  @Test
+  void convertFromPaimon() throws Exception {
+    String tableName = "table_3";
+    Path path = tmpDir.resolve("test-table-paimon");
+    FileStoreTable paimonTable = createPaimonTable(path, tableName);
+    String sourceBasePath = paimonTable.location().toString();
+    sparkSession.createDataset(createRows(), RowEncoder.apply(STRUCT_TYPE)).write().format("paimon")
+        .mode(SaveMode.Append).save(sourceBasePath);
+
+    ConversionController conversionController = new ConversionController(new Configuration());
+    ConversionSourceProvider<org.apache.paimon.Snapshot> provider = new PaimonConversionSourceProvider();
+    provider.init(new Configuration());
+    ConversionConfig conversionConfig = ConversionConfig.builder()
+        .sourceTable(SourceTable.builder()
+            .basePath(sourceBasePath)
+            .name(tableName)
+            .formatName("PAIMON")
+            .build())
+        .targetTables(Arrays.asList(
+            TargetTable.builder().basePath(sourceBasePath).formatName("HUDI").name(tableName).build(),
+            TargetTable.builder().basePath(sourceBasePath).formatName("DELTA").name(tableName).build(),
+            TargetTable.builder().basePath(sourceBasePath).formatName("ICEBERG").name(tableName).build()))
+        .syncMode(SyncMode.INCREMENTAL)
+        .build();
+    // Paimon is source-only right now; targets remain HUDI/DELTA/ICEBERG.
+    assertSyncSuccess(conversionController, conversionConfig, provider, "HUDI", "DELTA", "ICEBERG");
+  }
+
+  private static <T> void assertSyncSuccess(
+      ConversionController conversionController,
+      ConversionConfig conversionConfig,
+      ConversionSourceProvider<T> provider,
+      String... expectedTargets) {
+    Map<String, SyncResult> results = conversionController.sync(conversionConfig, provider);
+    Set<String> actualTargets = new HashSet<>(results.keySet());
+    assertEquals(new HashSet<>(Arrays.asList(expectedTargets)), actualTargets);
+    results.forEach((format, result) -> {
+      assertEquals(SyncStatusCode.SUCCESS, result.getTableFormatSyncStatus().getStatusCode());
+    });
+  }
+
+  private static FileStoreTable createPaimonTable(Path basePath, String tableName) throws Exception {
+    CatalogContext context = CatalogContext.create(new org.apache.paimon.fs.Path(basePath.toUri().toString()));
+    Catalog catalog = CatalogFactory.createCatalog(context);
+    catalog.createDatabase("test_db", true);
+    Identifier identifier = Identifier.create("test_db", tableName);
+    org.apache.paimon.schema.Schema schema = org.apache.paimon.schema.Schema.newBuilder()
+        .column("key", org.apache.paimon.types.DataTypes.STRING())
+        .column("partition_string", org.apache.paimon.types.DataTypes.STRING())
+        .column("time_millis", org.apache.paimon.types.DataTypes.TIMESTAMP_WITH_LOCAL_TIME_ZONE())
+        .column("value", org.apache.paimon.types.DataTypes.STRING())
+        .primaryKey("key", "partition_string")
+        .partitionKeys("partition_string")
+        .option("bucket", "1")
+        .option("bucket-key", "key")
+        .build();
+    catalog.createTable(identifier, schema, true);
+    return (FileStoreTable) catalog.getTable(identifier);
   }
 }
