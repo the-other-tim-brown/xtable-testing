@@ -39,6 +39,10 @@
             <artifactId>hudi-spark3.4-bundle_2.12</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.apache.hudi</groupId>
+            <artifactId>hudi-java-client</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.iceberg</groupId>
             <artifactId>iceberg-core</artifactId>
         </dependency>
@@ -65,6 +69,14 @@
         <dependency>
             <groupId>io.delta</groupId>
             <artifactId>delta-core_${scala.version.prefix}</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.paimon</groupId>
+            <artifactId>paimon-bundle</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.paimon</groupId>
+            <artifactId>paimon-spark-3.4</artifactId>
         </dependency>
 
         <dependency>
